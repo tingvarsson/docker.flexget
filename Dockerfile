@@ -10,4 +10,5 @@ RUN apt-get update \
     && apt-get -y install software-properties-common \
     && apt-get update \
     && apt-get install -y python python-pip \
+    && pip install --upgrade setuptools \
     && pip install flexget
