@@ -1,6 +1,6 @@
 # FlexGet
 #
-# Version 1.0
+# Version 1.0.0
 
 FROM ubuntu:15.10
 MAINTAINER Thomas Ingvarsson <ingvarsson.thomas@gmail.com>
