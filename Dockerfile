@@ -2,7 +2,7 @@
 #
 # Version 2.0.0
 
-FROM tingvarsson/python:1.0.0
+FROM tingvarsson/python:latest
 MAINTAINER Thomas Ingvarsson <ingvarsson.thomas@gmail.com>
 
 RUN apk add --no-cache unrar && \
