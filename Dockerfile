@@ -9,3 +9,5 @@ RUN apk add --no-cache unrar && \
     apk add --no-cache --virtual=build-dependencies python-dev ca-certificates && \
     pip install "flexget>=1.0,<2.0" transmissionrpc rarfile && \
     apk del build-dependencies
+
+CMD ["flexget", "daemon", "start"]
