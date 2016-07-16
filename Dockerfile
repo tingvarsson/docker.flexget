@@ -6,8 +6,6 @@ FROM tingvarsson/python:latest
 MAINTAINER Thomas Ingvarsson <ingvarsson.thomas@gmail.com>
 
 RUN apk add --no-cache unrar && \
-    apk add --no-cache --virtual=build-dependencies python-dev ca-certificates && \
-    pip install flexget transmissionrpc rarfile && \
-    apk del build-dependencies
+    pip install flexget transmissionrpc rarfile
 
 CMD ["flexget", "daemon", "start"]
