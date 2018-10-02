@@ -1,6 +1,6 @@
 # FlexGet
 #
-# Version 3.2.0
+# Version latest
 
 FROM tingvarsson/python:latest
 MAINTAINER Thomas Ingvarsson <ingvarsson.thomas@gmail.com>
