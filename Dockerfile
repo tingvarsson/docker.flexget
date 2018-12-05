@@ -2,7 +2,7 @@
 #
 # Version latest
 
-FROM tingvarsson/python:latest
+FROM python:alpine
 MAINTAINER Thomas Ingvarsson <ingvarsson.thomas@gmail.com>
 
 RUN apk add --no-cache unrar nodejs && \
