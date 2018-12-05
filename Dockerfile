@@ -3,7 +3,7 @@
 # Version latest
 
 FROM python:3.6-alpine
-MAINTAINER Thomas Ingvarsson <ingvarsson.thomas@gmail.com>
+LABEL maintainer "Thomas Ingvarsson <ingvarsson.thomas@gmail.com>"
 
 RUN apk add --no-cache unrar nodejs && \
     apk add --no-cache --virtual=build-dependencies ca-certificates && \
