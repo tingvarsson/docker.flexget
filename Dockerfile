@@ -12,6 +12,7 @@ RUN apk add --no-cache unrar nodejs && \
     apk del build-dependencies
 
 VOLUME /flexget
+WORKDIR /flexget
 
 COPY start.sh /start.sh
 
