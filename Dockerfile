@@ -11,8 +11,8 @@ RUN apk add --no-cache unrar nodejs && \
     pip install flexget transmissionrpc rarfile cfscrape subliminal && \
     apk del build-dependencies
 
-WORKDIR /flexget
+VOLUME /flexget
 
 COPY start.sh /flexget/start.sh
 
-CMD ["./start.sh"]
+CMD ["/flexget/start.sh"]
