@@ -2,7 +2,7 @@
 #
 # Version latest
 
-FROM python:3.7-alpine
+FROM python:alpine
 LABEL maintainer "Thomas Ingvarsson <ingvarsson.thomas@gmail.com>"
 
 RUN apk add --no-cache unrar nodejs && \
