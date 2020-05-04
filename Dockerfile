@@ -23,7 +23,7 @@ RUN apk add --no-cache \
     cloudscraper \
     flexget \
     rarfile \
-    subliminal \
+    subliminal==2.0.5 \
     transmissionrpc \
     && apk del build-dependencies
 
