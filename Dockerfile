@@ -2,7 +2,7 @@
 #
 # Version latest
 
-FROM python:alpine
+FROM python:3.8-alpine
 LABEL maintainer "Thomas Ingvarsson <ingvarsson.thomas@gmail.com>"
 
 RUN apk add --no-cache \
