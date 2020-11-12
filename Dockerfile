@@ -1,9 +1,17 @@
-# FlexGet
-#
-# Version latest
-
 FROM python:3.8-alpine
 LABEL maintainer "Thomas Ingvarsson <ingvarsson.thomas@gmail.com>"
+
+ARG BUILD_DATE
+ARG VCS_REF
+ARG FLEXGET_VERSION
+
+LABEL org.label-schema.schema-version="1.0"
+LABEL org.label-schema.build-date=$BUILD_DATE
+LABEL org.label-schema.name="tingvarsson/flexget"
+LABEL org.label-schema.description="FlexGet image based on Alpine Linux"
+LABEL org.label-schema.vcs-url="https://github.com/tingvarsson-docker/docker.flexget"
+LABEL org.label-schema.vcs-ref=$VCS_REF
+LABEL org.label-schema.version=$FLEXGET_VERSION
 
 RUN apk add --no-cache \
     unrar \
@@ -21,7 +29,7 @@ RUN apk add --no-cache \
     && pip install \
     cfscrape \
     cloudscraper \
-    flexget \
+    flexget==$FLEXGET_VERSION \
     rarfile \
     subliminal==2.0.5 \
     transmissionrpc \
