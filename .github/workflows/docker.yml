@@ -21,16 +21,14 @@ env:
   IMAGE_NAME: flexget
 
 jobs:
-  flexget_meta:
+  dockerhub-registry:
     runs-on: ubuntu-latest
 
-    outputs:
-      version: ${{ steps.version.outputs.full }}
-      short_version: ${{ steps.version.outputs.short }}
-      major_version: ${{ steps.version.outputs.major }}
-
     steps:
-      - id: version
+      - uses: actions/checkout@v2
+
+      - name: Flexget version
+        id: version
         run: |
           FLEXGET_VERSION=$(curl -s https://pypi.org/pypi/FlexGet/json | docker run -i stedolan/jq -j ".info.version")
           FLEXGET_SHORT_VERSION=${FLEXGET_VERSION%.*}
@@ -39,86 +37,6 @@ jobs:
           echo "::set-output name=full::$FLEXGET_VERSION"
           echo "::set-output name=short::$FLEXGET_SHORT_VERSION"
           echo "::set-output name=major::$FLEXGET_MAJOR_VERSION"
-
-  test:
-    runs-on: ubuntu-latest
-
-    needs: flexget_meta
-
-    steps:
-      - uses: actions/checkout@v2
-
-      - name: Run tests
-        run: |
-          docker build \
-            --build-arg VCS_REF=${{ github.sha }} \
-            --build-arg BUILD_DATE=$(date -u +”%Y-%m-%dT%H:%M:%SZ”) \
-            --build-arg FLEXGET_VERSION=${{ needs.flexget_meta.outputs.version }} \
-            --file Dockerfile \
-            .
-
-
-  github-registry:
-    needs: [flexget_meta, test]
-
-    runs-on: ubuntu-latest
-    if: github.event_name != 'pull_request'
-
-    steps:
-      - uses: actions/checkout@v2
-
-      - name: Build image
-        run: docker build \
-            --build-arg VCS_REF=${{ github.sha }} \
-            --build-arg BUILD_DATE=$(date -u +”%Y-%m-%dT%H:%M:%SZ”) \
-            --build-arg FLEXGET_VERSION=${{ needs.flexget_meta.outputs.version }} \
-            --file Dockerfile \
-            --tag $IMAGE_NAME \
-            .
-
-      - name: Log into github registry
-        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin
-
-      - name: Push image to github registry
-        run: |
-          IMAGE_ID=docker.pkg.github.com/${{ github.repository }}/$IMAGE_NAME
-
-          # Change all uppercase to lowercase
-          IMAGE_ID=$(echo $IMAGE_ID | tr '[A-Z]' '[a-z]')
-
-          # Strip git ref prefix from version
-          VERSION=$(echo "${{ github.ref }}" | sed -e 's,.*/\(.*\),\1,')
-
-          # Strip "v" prefix from tag name
-          [[ "${{ github.ref }}" == "refs/tags/"* ]] && VERSION=$(echo $VERSION | sed -e 's/^v//')
-
-          # Use Docker `latest` tag convention
-          [ "$VERSION" == "master" ] && VERSION=latest
-
-          echo IMAGE_ID=$IMAGE_ID
-          echo VERSION=$VERSION
-
-          docker tag $IMAGE_NAME $IMAGE_ID:$VERSION
-          docker push $IMAGE_ID:$VERSION
-
-          docker tag $IMAGE_NAME $IMAGE_ID:${{ needs.flexget_meta.outputs.version }}
-          docker push $IMAGE_ID:${{ needs.flexget_meta.outputs.version }}
-
-          docker tag $IMAGE_NAME $IMAGE_ID:${{ needs.flexget_meta.outputs.short_version }}
-          docker push $IMAGE_ID:${{ needs.flexget_meta.outputs.short_version }}
-
-          docker tag $IMAGE_NAME $IMAGE_ID:${{ needs.flexget_meta.outputs.major_version }}
-          docker push $IMAGE_ID:${{ needs.flexget_meta.outputs.major_version }}
-
-
-  dockerhub-registry:
-    needs: [flexget_meta, test]
-
-    runs-on: ubuntu-latest
-    if: ${{ true }} #github.event_name != 'pull_request'
-
-    steps:
-      - uses: actions/checkout@v2
 
       - name: Date
         id: date
@@ -134,9 +52,9 @@ jobs:
           flavor: |
             latest=true
           tags: |
-            type=raw,value={{ needs.flexget_meta.outputs.version }}
-            type=raw,value={{ needs.flexget_meta.outputs.short_version }}
-            type=raw,value={{ needs.flexget_meta.outputs.major_version }}
+            type=raw,value={{ steps.version.outputs.full }}
+            type=raw,value={{ steps.version.outputs.short }}
+            type=raw,value={{ steps.version.outputs.major }}
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v1
@@ -153,10 +71,10 @@ jobs:
       - name: Push to Docker Hub
         uses: docker/build-push-action@v2
         with:
-          push: ${{ false }} #${{ github.event_name != 'pull_request' }}
+          push: ${{ github.event_name != 'pull_request' }}
           build-args: |
             VCS_REF=${{ github.sha }}
             BUILD_DATE=${{ steps.date.outputs.date }}
-            FLEXGET_VERSION=${{ needs.flexget_meta.outputs.version }}
+            FLEXGET_VERSION=${{ steps.version.outputs.full }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
