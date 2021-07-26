@@ -49,6 +49,10 @@ jobs:
           flavor: |
             latest=true
           tags: |
+            type=schedule
+            type=ref,event=branch
+            type=ref,event=tag
+            type=ref,event=pr
             type=raw,value={{ steps.version.outputs.full }}
             type=raw,value={{ steps.version.outputs.short }}
             type=raw,value={{ steps.version.outputs.major }}
