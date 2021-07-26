@@ -1,0 +1,19 @@
+version: 2
+updates:
+  - package-ecosystem: "docker"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+    ignore:
+      - dependency-name: "*"
+        # Ignore all patch versions
+        update-types: ["version-update:semver-patch"]
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+    ignore:
+      - dependency-name: "*"
+        # Ignore all minor or patch versions, only update on major version changes
+        update-types: ["version-update:semver-minor", "version-update:semver-patch"]

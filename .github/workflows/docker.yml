@@ -1,0 +1,136 @@
+name: Docker
+
+on:
+  push:
+    # Publish `master` as Docker `latest` image.
+    branches:
+      - master
+
+    # Publish `v1.2.3` tags as releases.
+    tags:
+      - v*
+
+  # Rebuild and publish nightly to catch any base image updates that might have happened
+  schedule:
+    - cron:  '* 0 * * *'
+
+  # Run tests for any PRs.
+  pull_request:
+
+env:
+  IMAGE_NAME: flexget
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Run tests
+        run: |
+          docker build \
+            --build-arg VCS_REF=$GITHUB_SHA \
+            --build-arg BUILD_DATE=$(date -u +”%Y-%m-%dT%H:%M:%SZ”) \
+            --build-arg FLEXGET_VERSION=$(curl -s https://pypi.org/pypi/FlexGet/json | docker run -i stedolan/jq -j ".info.version") \
+            --file Dockerfile \
+            .
+
+
+  github-registry:
+    needs: test
+
+    runs-on: ubuntu-latest
+    if: github.event_name != 'pull_request'
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Build image
+        run: docker build \
+            --build-arg VCS_REF=$GITHUB_SHA \
+            --build-arg BUILD_DATE=$(date -u +”%Y-%m-%dT%H:%M:%SZ”) \
+            --build-arg FLEXGET_VERSION=$(curl -s https://pypi.org/pypi/FlexGet/json | docker run -i stedolan/jq -j ".info.version") \
+            --file Dockerfile \
+            --tag $IMAGE_NAME \
+            .
+
+      - name: Log into github registry
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin
+
+      - name: Push image to github registry
+        run: |
+          IMAGE_ID=docker.pkg.github.com/${{ github.repository }}/$IMAGE_NAME
+
+          # Change all uppercase to lowercase
+          IMAGE_ID=$(echo $IMAGE_ID | tr '[A-Z]' '[a-z]')
+
+          # Strip git ref prefix from version
+          VERSION=$(echo "${{ github.ref }}" | sed -e 's,.*/\(.*\),\1,')
+
+          # Strip "v" prefix from tag name
+          [[ "${{ github.ref }}" == "refs/tags/"* ]] && VERSION=$(echo $VERSION | sed -e 's/^v//')
+
+          # Use Docker `latest` tag convention
+          [ "$VERSION" == "master" ] && VERSION=latest
+
+          echo IMAGE_ID=$IMAGE_ID
+          echo VERSION=$VERSION
+
+          docker tag $IMAGE_NAME $IMAGE_ID:$VERSION
+          docker push $IMAGE_ID:$VERSION
+
+          FLEXGET_VERSION=$(docker inspect --format '{{ index .Config.Labels "org.label-schema.version"}}' $IMAGE_NAME)
+          FLEXGET_SHORT_VERSION=${FLEXGET_VERSION%.*}
+          FLEXGET_MAJOR_VERSION=${FLEXGET_SHORT_VERSION%.*}
+
+          docker tag $IMAGE_NAME $IMAGE_ID:$FLEXGET_VERSION
+          docker push $IMAGE_ID:$FLEXGET_VERSION
+
+          docker tag $IMAGE_NAME $IMAGE_ID:$FLEXGET_SHORT_VERSION
+          docker push $IMAGE_ID:$FLEXGET_SHORT_VERSION
+
+          docker tag $IMAGE_NAME $IMAGE_ID:$FLEXGET_MAJOR_VERSION
+          docker push $IMAGE_ID:$FLEXGET_MAJOR_VERSION
+
+
+  dockerhub-registry:
+    needs: test
+
+    runs-on: ubuntu-latest
+    if: github.event_name != 'pull_request'
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Docker meta
+        id: meta
+        uses: docker/metadata-action@v3
+        with:
+          images: |
+            ${{ github.repository }}
+          flavor: |
+            latest=true
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v1
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+
+      - name: Login to DockerHub
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Push to Docker Hub
+        uses: docker/build-push-action@v2
+        with:
+          push: ${{ github.event_name != 'pull_request' }}
+          build-args: |
+            VCS_REF=${{ github.sha }}
+            BUILD_DATE=$(date -u +”%Y-%m-%dT%H:%M:%SZ”)
+            FLEXGET_VERSION=$(curl -s https://pypi.org/pypi/FlexGet/json | docker run -i stedolan/jq -j ".info.version")
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
