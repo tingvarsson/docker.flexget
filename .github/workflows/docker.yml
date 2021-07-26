@@ -24,11 +24,6 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: Date
-        id: date
-        run: |
-          echo "::set-output name=date::$(date -u +”%Y-%m-%dT%H:%M:%SZ”)"
-
       - name: Flexget version
         id: version
         run: |
