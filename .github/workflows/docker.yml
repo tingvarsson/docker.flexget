@@ -45,7 +45,7 @@ jobs:
         uses: docker/metadata-action@v3
         with:
           images: |
-            ${{ github.repository }}
+            tingvarsson/flexget
           flavor: |
             latest=true
           tags: |
