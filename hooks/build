@@ -1,9 +1,0 @@
-#!/bin/bash
-
-docker build \
-    --build-arg VCS_REF=$SOURCE_COMMIT \
-    --build-arg BUILD_DATE=$(date -u +”%Y-%m-%dT%H:%M:%SZ”) \
-    --build-arg FLEXGET_VERSION=$(curl -s https://pypi.org/pypi/FlexGet/json | docker run -i stedolan/jq -j ".info.version") \
-    -f $DOCKERFILE_PATH \
-    -t $IMAGE_NAME \
-    .
