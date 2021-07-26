@@ -101,10 +101,6 @@ jobs:
           docker tag $IMAGE_NAME $IMAGE_ID:$VERSION
           docker push $IMAGE_ID:$VERSION
 
-          FLEXGET_VERSION=$(docker inspect --format '{{ index .Config.Labels "org.label-schema.version"}}' $IMAGE_NAME)
-          FLEXGET_SHORT_VERSION=${FLEXGET_VERSION%.*}
-          FLEXGET_MAJOR_VERSION=${FLEXGET_SHORT_VERSION%.*}
-
           docker tag $IMAGE_NAME $IMAGE_ID:${{ needs.flexget_meta.outputs.version }}
           docker push $IMAGE_ID:${{ needs.flexget_meta.outputs.version }}
 
@@ -132,6 +128,11 @@ jobs:
             ${{ github.repository }}
           flavor: |
             latest=true
+          tags: |
+            type=raw,value={{ needs.flexget_meta.outputs.version }}
+            type=raw,value={{ needs.flexget_meta.outputs.short_version }}
+            type=raw,value={{ needs.flexget_meta.outputs.major_version }}
+            
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v1
@@ -152,6 +153,6 @@ jobs:
           build-args: |
             VCS_REF=${{ github.sha }}
             BUILD_DATE=$(date -u +”%Y-%m-%dT%H:%M:%SZ”)
-            FLEXGET_VERSION=$(curl -s https://pypi.org/pypi/FlexGet/json | docker run -i stedolan/jq -j ".info.version")
+            FLEXGET_VERSION=${{ needs.flexget_meta.outputs.version }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
