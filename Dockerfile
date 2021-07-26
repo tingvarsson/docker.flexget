@@ -8,7 +8,7 @@ ARG FLEXGET_VERSION
 LABEL org.label-schema.schema-version="1.0"
 LABEL org.label-schema.build-date=$BUILD_DATE
 LABEL org.label-schema.name="tingvarsson/flexget"
-LABEL org.label-schema.description="FlexGet image based on Alpine Linux"
+LABEL org.label-schema.description="Docker image with Flexget based on light weight OS Alpine"
 LABEL org.label-schema.vcs-url="https://github.com/tingvarsson/docker.flexget"
 LABEL org.label-schema.vcs-ref=$VCS_REF
 LABEL org.label-schema.version=$FLEXGET_VERSION

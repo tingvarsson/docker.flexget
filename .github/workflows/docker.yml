@@ -24,6 +24,11 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
+      - name: Date
+        id: date
+        run: |
+          echo "::set-output name=date::$(date -u +”%Y-%m-%dT%H:%M:%SZ”)"
+
       - name: Flexget version
         id: version
         run: |
@@ -48,12 +53,12 @@ jobs:
             type=ref,event=branch
             type=ref,event=tag
             type=ref,event=pr
-            type=raw,value={{ steps.version.outputs.full }}
-            type=raw,value={{ steps.version.outputs.short }}
-            type=raw,value={{ steps.version.outputs.major }}
-            type=sha,format=long
+            type=raw,value=${{ steps.version.outputs.full }}
+            type=raw,value=${{ steps.version.outputs.short }}
+            type=raw,value=${{ steps.version.outputs.major }}
+            type=sha,format=long,prefix=
           labels: |
-            org.label-schema.version={{ steps.version.outputs.full }}
+            org.opencontainers.image.version=${{ steps.version.outputs.full }}
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v1
