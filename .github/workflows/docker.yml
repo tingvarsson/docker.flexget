@@ -118,7 +118,12 @@ jobs:
     if: ${{ true }} #github.event_name != 'pull_request'
 
     steps:
-      - uses: actions/checkout@v2          
+      - uses: actions/checkout@v2
+
+      - name: Date
+        id: date
+        run: |
+          echo "::set-output name=date::$(date -u +”%Y-%m-%dT%H:%M:%SZ”)"
 
       - name: Docker meta
         id: meta
@@ -132,7 +137,6 @@ jobs:
             type=raw,value={{ needs.flexget_meta.outputs.version }}
             type=raw,value={{ needs.flexget_meta.outputs.short_version }}
             type=raw,value={{ needs.flexget_meta.outputs.major_version }}
-            
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v1
@@ -152,7 +156,7 @@ jobs:
           push: ${{ false }} #${{ github.event_name != 'pull_request' }}
           build-args: |
             VCS_REF=${{ github.sha }}
-            BUILD_DATE=$(date -u +”%Y-%m-%dT%H:%M:%SZ”)
+            BUILD_DATE=${{ steps.date.outputs.date }}
             FLEXGET_VERSION=${{ needs.flexget_meta.outputs.version }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
