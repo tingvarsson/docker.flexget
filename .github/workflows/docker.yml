@@ -21,8 +21,29 @@ env:
   IMAGE_NAME: flexget
 
 jobs:
+  flexget_meta:
+    runs-on: ubuntu-latest
+
+    outputs:
+      version: ${{ steps.version.outputs.full }}
+      short_version: ${{ steps.version.outputs.short }}
+      major_version: ${{ steps.version.outputs.major }}
+
+    steps:
+      - id: version
+        run: |
+          FLEXGET_VERSION=$(curl -s https://pypi.org/pypi/FlexGet/json | docker run -i stedolan/jq -j ".info.version")
+          FLEXGET_SHORT_VERSION=${FLEXGET_VERSION%.*}
+          FLEXGET_MAJOR_VERSION=${FLEXGET_SHORT_VERSION%.*}
+
+          echo "::set-output name=full::$FLEXGET_VERSION"
+          echo "::set-output name=short::$FLEXGET_SHORT_VERSION"
+          echo "::set-output name=major::$FLEXGET_MAJOR_VERSION"
+
   test:
     runs-on: ubuntu-latest
+
+    needs: flexget_meta
 
     steps:
       - uses: actions/checkout@v2
@@ -30,15 +51,15 @@ jobs:
       - name: Run tests
         run: |
           docker build \
-            --build-arg VCS_REF=$GITHUB_SHA \
+            --build-arg VCS_REF=${{ github.sha }} \
             --build-arg BUILD_DATE=$(date -u +”%Y-%m-%dT%H:%M:%SZ”) \
-            --build-arg FLEXGET_VERSION=$(curl -s https://pypi.org/pypi/FlexGet/json | docker run -i stedolan/jq -j ".info.version") \
+            --build-arg FLEXGET_VERSION=${{ needs.flexget_meta.outputs.version }} \
             --file Dockerfile \
             .
 
 
   github-registry:
-    needs: test
+    needs: [flexget_meta, test]
 
     runs-on: ubuntu-latest
     if: github.event_name != 'pull_request'
@@ -48,9 +69,9 @@ jobs:
 
       - name: Build image
         run: docker build \
-            --build-arg VCS_REF=$GITHUB_SHA \
+            --build-arg VCS_REF=${{ github.sha }} \
             --build-arg BUILD_DATE=$(date -u +”%Y-%m-%dT%H:%M:%SZ”) \
-            --build-arg FLEXGET_VERSION=$(curl -s https://pypi.org/pypi/FlexGet/json | docker run -i stedolan/jq -j ".info.version") \
+            --build-arg FLEXGET_VERSION=${{ needs.flexget_meta.outputs.version }} \
             --file Dockerfile \
             --tag $IMAGE_NAME \
             .
@@ -84,24 +105,24 @@ jobs:
           FLEXGET_SHORT_VERSION=${FLEXGET_VERSION%.*}
           FLEXGET_MAJOR_VERSION=${FLEXGET_SHORT_VERSION%.*}
 
-          docker tag $IMAGE_NAME $IMAGE_ID:$FLEXGET_VERSION
-          docker push $IMAGE_ID:$FLEXGET_VERSION
+          docker tag $IMAGE_NAME $IMAGE_ID:${{ needs.flexget_meta.outputs.version }}
+          docker push $IMAGE_ID:${{ needs.flexget_meta.outputs.version }}
 
-          docker tag $IMAGE_NAME $IMAGE_ID:$FLEXGET_SHORT_VERSION
-          docker push $IMAGE_ID:$FLEXGET_SHORT_VERSION
+          docker tag $IMAGE_NAME $IMAGE_ID:${{ needs.flexget_meta.outputs.short_version }}
+          docker push $IMAGE_ID:${{ needs.flexget_meta.outputs.short_version }}
 
-          docker tag $IMAGE_NAME $IMAGE_ID:$FLEXGET_MAJOR_VERSION
-          docker push $IMAGE_ID:$FLEXGET_MAJOR_VERSION
+          docker tag $IMAGE_NAME $IMAGE_ID:${{ needs.flexget_meta.outputs.major_version }}
+          docker push $IMAGE_ID:${{ needs.flexget_meta.outputs.major_version }}
 
 
   dockerhub-registry:
-    needs: test
+    needs: [flexget_meta, test]
 
     runs-on: ubuntu-latest
-    if: github.event_name != 'pull_request'
+    if: ${{ true }} #github.event_name != 'pull_request'
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v2          
 
       - name: Docker meta
         id: meta
@@ -127,7 +148,7 @@ jobs:
       - name: Push to Docker Hub
         uses: docker/build-push-action@v2
         with:
-          push: ${{ github.event_name != 'pull_request' }}
+          push: ${{ false }} #${{ github.event_name != 'pull_request' }}
           build-args: |
             VCS_REF=${{ github.sha }}
             BUILD_DATE=$(date -u +”%Y-%m-%dT%H:%M:%SZ”)
