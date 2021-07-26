@@ -10,15 +10,12 @@ on:
     tags:
       - v*
 
-  # Rebuild and publish nightly to catch any base image updates that might have happened
+  # Nightly to capture latest base image and flexget version
   schedule:
     - cron:  '* 0 * * *'
 
   # Run tests for any PRs.
   pull_request:
-
-env:
-  IMAGE_NAME: flexget
 
 jobs:
   dockerhub-registry:
