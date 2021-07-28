@@ -12,7 +12,7 @@ on:
 
   # Nightly to capture latest base image and flexget version
   schedule:
-    - cron:  '* 0 * * *'
+    - cron:  '* 21 * * *'
 
   # Run tests for any PRs.
   pull_request:
