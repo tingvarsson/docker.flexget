@@ -31,9 +31,9 @@ jobs:
           FLEXGET_SHORT_VERSION=${FLEXGET_VERSION%.*}
           FLEXGET_MAJOR_VERSION=${FLEXGET_SHORT_VERSION%.*}
 
-          echo "::set-output name=full::$FLEXGET_VERSION"
-          echo "::set-output name=short::$FLEXGET_SHORT_VERSION"
-          echo "::set-output name=major::$FLEXGET_MAJOR_VERSION"
+          echo "full=$FLEXGET_VERSION" >> $GITHUB_OUTPUT
+          echo "short=$FLEXGET_SHORT_VERSION" >> $GITHUB_OUTPUT
+          echo "major=$FLEXGET_MAJOR_VERSION" >> $GITHUB_OUTPUT
 
       - name: Docker meta
         id: meta
