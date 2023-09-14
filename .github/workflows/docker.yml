@@ -16,6 +16,7 @@ on:
 
   # Run tests for any PRs.
   pull_request:
+  workflow_dispatch:
 
 jobs:
   dockerhub-registry:
