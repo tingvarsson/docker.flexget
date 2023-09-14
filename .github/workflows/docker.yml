@@ -16,6 +16,8 @@ on:
 
   # Run tests for any PRs.
   pull_request:
+
+  # Allow to trigger manually from github ui
   workflow_dispatch:
 
 jobs:
