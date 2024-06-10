@@ -38,7 +38,7 @@ RUN apk add --no-cache \
     flexget==$FLEXGET_VERSION \
     rarfile \
     subliminal \
-    transmission-rpc==4.3.1 \
+    transmission-rpc \
     && apk del build-dependencies
 
 VOLUME /flexget
