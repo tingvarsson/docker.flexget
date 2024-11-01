@@ -30,7 +30,7 @@ jobs:
       - name: Flexget version
         id: version
         run: |
-          FLEXGET_VERSION=$(curl -s https://pypi.org/pypi/FlexGet/json | docker run -i stedolan/jq -j ".info.version")
+          FLEXGET_VERSION=$(curl -s https://pypi.org/pypi/FlexGet/json | jq -j ".info.version")
           FLEXGET_SHORT_VERSION=${FLEXGET_VERSION%.*}
           FLEXGET_MAJOR_VERSION=${FLEXGET_SHORT_VERSION%.*}
 
