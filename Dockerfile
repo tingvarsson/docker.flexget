@@ -13,7 +13,7 @@ RUN /build/build.sh "$UNRAR_URL"
 
 
 # Build flexget image
-FROM python:3.11-alpine3.20
+FROM python:3.13-alpine3.20
 LABEL maintainer "Thomas Ingvarsson <ingvarsson.thomas@gmail.com>"
 
 ARG FLEXGET_VERSION
