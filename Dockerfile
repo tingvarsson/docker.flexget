@@ -6,14 +6,14 @@ ARG UNRAR_URL=https://www.rarlab.com/rar/unrarsrc-${UNRAR_VERSION}.tar.gz
 
 # Build unrar.  It has been moved to non-free since Alpine 3.15.
 # https://wiki.alpinelinux.org/wiki/Release_Notes_for_Alpine_3.15.0#unrar_moved_to_non-free
-FROM alpine:3.22 AS unrar
+FROM alpine:3.20 AS unrar
 ARG UNRAR_URL
 COPY src/unrar /build
 RUN /build/build.sh "$UNRAR_URL"
 
 
 # Build flexget image
-FROM python:3.13-alpine3.22
+FROM python:3.11-alpine3.20
 LABEL maintainer "Thomas Ingvarsson <ingvarsson.thomas@gmail.com>"
 
 ARG FLEXGET_VERSION
@@ -21,7 +21,6 @@ ARG FLEXGET_VERSION
 COPY --from=unrar /tmp/unrar-install/usr/bin/unrar /usr/bin/unrar
 
 RUN apk add --no-cache \
-    bind-tools \
     nodejs \
     && apk add --no-cache --virtual=build-dependencies \
     build-base \
