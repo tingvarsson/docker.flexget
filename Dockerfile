@@ -1,45 +1,27 @@
 # Flexget version is provided via build arg
 ARG FLEXGET_VERSION
 
-ARG UNRAR_VERSION=6.1.7
-ARG UNRAR_URL=https://www.rarlab.com/rar/unrarsrc-${UNRAR_VERSION}.tar.gz
-
-# Build unrar.  It has been moved to non-free since Alpine 3.15.
-# https://wiki.alpinelinux.org/wiki/Release_Notes_for_Alpine_3.15.0#unrar_moved_to_non-free
-FROM alpine:3.20 AS unrar
-ARG UNRAR_URL
-COPY src/unrar /build
-RUN /build/build.sh "$UNRAR_URL"
-
-
-# Build flexget image
-FROM python:3.11-alpine3.20
+FROM registry.access.redhat.com/ubi9/python-312-minimal
 LABEL maintainer "Thomas Ingvarsson <ingvarsson.thomas@gmail.com>"
 
 ARG FLEXGET_VERSION
 
-COPY --from=unrar /tmp/unrar-install/usr/bin/unrar /usr/bin/unrar
+# Change to root to allow installing with dnf, then back to non-root user as in base image
+USER root
+RUN rpm -ivh https://dl.fedoraproject.org/pub/epel/epel-release-latest-9.noarch.rpm \
+    && microdnf install -y unrar \
+    && microdnf clean all
+USER 1001
 
-RUN apk add --no-cache \
-    nodejs \
-    && apk add --no-cache --virtual=build-dependencies \
-    build-base \
-    ca-certificates \
-    jpeg-dev \
-    libffi-dev \
-    libxml2-dev \
-    libxslt-dev \
-    openssl-dev \
-    && pip install --upgrade \
-    setuptools \
+RUN pip install --upgrade pip \
+    && pip install --upgrade setuptools \
     && pip install \
     cfscrape \
     cloudscraper \
     flexget==$FLEXGET_VERSION \
     rarfile \
     subliminal \
-    transmission-rpc \
-    && apk del build-dependencies
+    transmission-rpc
 
 VOLUME /flexget
 WORKDIR /flexget
